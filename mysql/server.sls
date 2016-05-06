@@ -1,6 +1,17 @@
 {%- from "mysql/map.jinja" import server with context %}
 {%- if server.enabled %}
 
+{%- set mysql_connection_unix_socket = '/var/run/mysqld/mysqld.sock' %}
+{%- if pillar.mysql.server.admin is defined %}
+  {%- set mysql_connection_user = pillar.mysql.server.admin.user %}
+  {%- set mysql_connection_pass = pillar.mysql.server.admin.password %}
+{%- else %}
+  {%- set mysql_connection_user = 'root' %}
+  {%- set mysql_connection_pass = '' %}
+{%- endif %}
+{%- set mysql_connection_db = 'mysql' %}
+{%- set mysql_connection_charset = 'utf8' %}
+
 include:
 - mysql.common
 
@@ -69,6 +80,10 @@ include:
   mysql_user.present:
   - host: '%'
   - password: {{ server.replication.password }}
+  - connection_user: {{ mysql_connection_user }}
+  - connection_pass: {{ mysql_connection_pass }}
+  - connection_unix_socket: {{ mysql_connection_unix_socket }}
+  - connection_charset: {{ mysql_connection_charset }}
 
 {{ server.replication.user }}_replication_grants:
   mysql_grants.present:
@@ -76,6 +91,10 @@ include:
   - database: '*.*'
   - user: {{ server.replication.user }}
   - host: '%'
+  - connection_user: {{ mysql_connection_user }}
+  - connection_pass: {{ mysql_connection_pass }}
+  - connection_unix_socket: {{ mysql_connection_unix_socket }}
+  - connection_charset: {{ mysql_connection_charset }}
 
 {%- endif %}
 
@@ -109,6 +128,10 @@ include:
 mysql_database_{{ database_name }}:
   mysql_database.present:
   - name: {{ database_name }}
+  - connection_user: {{ mysql_connection_user }}
+  - connection_pass: {{ mysql_connection_pass }}
+  - connection_unix_socket: {{ mysql_connection_unix_socket }}
+  - connection_charset: {{ mysql_connection_charset }}
   - require:
     - service: mysql_service
 
@@ -119,6 +142,8 @@ mysql_user_{{ user.name }}_{{ database_name }}_{{ user.host }}:
   - host: '{{ user.host }}'
   - name: '{{ user.name }}'
   - password: {{ user.password }}
+  - use:
+    - mysql_database: mysql_database_{{ database_name }}
   - require:
     - service: mysql_service
 
@@ -128,6 +153,8 @@ mysql_grants_{{ user.name }}_{{ database_name }}_{{ user.host }}:
   - database: '{{ database_name }}.*'
   - user: '{{ user.name }}'
   - host: '{{ user.host }}'
+  - use:
+    - mysql_database: mysql_database_{{ database_name }}
   - require:
     - mysql_user: mysql_user_{{ user.name }}_{{ database_name }}_{{ user.host }}
     - mysql_database: mysql_database_{{ database_name }}
@@ -170,6 +197,10 @@ mysql_user_{{ user.name }}_{{ user.host }}:
   {%- else %}
   - allow_passwordless: True
   {%- endif %}
+  - connection_user: {{ mysql_connection_user }}
+  - connection_pass: {{ mysql_connection_pass }}
+  - connection_unix_socket: {{ mysql_connection_unix_socket }}
+  - connection_charset: {{ mysql_connection_charset }}
 
 {%- endfor %}
 
