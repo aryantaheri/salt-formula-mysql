@@ -100,6 +100,7 @@ Tuned up MySQL server
         query_cache_limit: 16M
         query_cache_size: 96M
         force_encoding: utf8
+        sql_mode: "ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"
         database:
           name:
             encoding: 'utf8'
@@ -147,6 +148,78 @@ Galera initial server (master)
               password: 'password'
               host: 'localhost'
               rights: 'all privileges'
+
+Database management
+---------------------
+
+User, Database management on independent mysql server
+
+.. code-block:: yaml
+
+    mysql:
+      server:
+        admin:
+          user: root
+          password: pass
+        database:
+          name:
+            encoding: 'utf8'
+            users:
+            - name: 'username'
+              password: 'password'
+              host: 'localhost'
+              rights: 'all privileges'
+
+
+MySQL client role
+-----------------
+
+Database management on remote MySQL server
+
+.. code-block:: yaml
+
+    mysql:
+      client:
+        enabled: true
+        server:
+          server01:
+            admin:
+              host: database.host
+              port: 3306
+              user: root
+              password: password
+              encoding: utf8
+            database:
+              database01:
+                encoding: utf8
+                users:
+                - name: username
+                  password: 'password'
+                  host: 'localhost'
+                  rights: 'all privileges'
+
+User management on remote MySQL server
+
+.. code-block:: yaml
+
+    mysql:
+      client:
+        enabled: true
+        server:
+          server01:
+            admin:
+              host: database.host
+              port: 3306
+              user: root
+              password: password
+              encoding: utf8
+            users:
+            - name: user01
+              host: "*"
+              password: 'sdgdsgdsgd'
+            - name: user02
+              host: "localhost"
+
 
 Usage
 =====
